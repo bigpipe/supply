@@ -1,18 +1,13 @@
 describe('supply', function () {
   'use strict';
 
-  var assume = require('assume')
-    , Supply = require('./');
+  var assume = require('assume');
 
-  it('is exported a function', function () {
-    assume(Supply).to.be.a('function');
-  });
+  function Supply() {}
+  require('util').inherits(Supply, require('events').EventEmitter);
 
-  it('is an EventEmitter3', function () {
-    var s = new Supply();
-
-    assume(s).to.be.instanceOf(require('eventemitter3'));
-  });
+  require('./').middleware(Supply);
+  require('./').plugin(Supply);
 
   describe('.before', function () {
     it('emits a `before` event when adding a layer', function (next) {

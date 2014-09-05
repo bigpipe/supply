@@ -1,5 +1,206 @@
 'use strict';
 
+var supply = module.exports;
+
+supply.middleware = function middleware(Supply, options) {
+  options = options || {};
+
+  //
+  // Allow customization of the API names.
+  //
+  options.run = options.run || 'each';
+  options.add = options.add || 'before';
+  options.remove = options.remove || 'remove';
+
+  /**
+   * Add or retrieve a middleware layer. If no function argument is given we
+   * assume that you want to retrieve a middleware layer that matches the given
+   * name.
+   *
+   * If you do supply it with a function argument we assume that you wish to
+   * register this middleware layer for the given name. When adding a new layer
+   * you can supply the following options:
+   *
+   * - `index` The position of the middleware layer where we should add it.
+   * - `before` Name of a middleware layer that you want to run this before.
+   * - `context` Function execution context.
+   *
+   * @param {String} name Name of the layer we wish to add.
+   * @param {Function} fn Middleware layer.
+   * @param {Object} options Middleware layer configuration.
+   * @returns {Supply|Layer}
+   * @api public
+   */
+  Supply.prototype[options.add] = function before(name, fn, options) {
+    if (!this._before) this._before = [];
+    if (!fn) return this._before[index(this._before, name)];
+
+    options = options || {};
+
+    options.index = 'index' in options ? +options.index : this._before.length;
+    options.context = options.context || this;
+
+    if (options.before) options.index = index(this._before, options.before);
+    if (options.index > this._before.length) options.index = this._before.length;
+
+    var layer = new Layer(name, fn, options);
+
+    if (this.emit) this.emit(options.add, layer, options);
+    this._before.splice(options.index, 0, layer);
+
+    return this;
+  };
+
+  /**
+   * Removes the middleware from the stack.
+   *
+   * @param {String} name Name of the layer we wish to remove.
+   * @returns {Boolean} Indication of successful removal.
+   * @api public
+   */
+  Supply.prototype[options.remove] = function remove(name) {
+    var i = index(this._plugin, name);
+    if (i === -1) return false;
+
+    this.emit(options.remove, this._plugin.splice(i, 1));
+    return true;
+  };
+
+  /**
+   * Iterate and execute all middleware layers with the given set of arguments.
+   *
+   * @param {String} what Before or plugin we're executing.
+   * @Argument {Mixed} .. Arguments that need to be supplied to the layers.
+   * @param {Function} fn Completion callback.
+   * @returns {Supply}
+   * @api public
+   */
+  Supply.prototype[options.run] = function each(what, a, b, c, d) {
+    what = '_'+ what;
+    if (!this[what] || !this[what].length) return fn(), this;
+
+    //
+    // Create a copy of the arguments to prevent argument leaking in the loop
+    // closure.
+    //
+    for (var i = 1, l = arguments.length - 1, args = new Array(l); i < l; i++) {
+      args[i - 1] = arguments[i];
+    }
+
+    var fn = arguments[l]
+      , supply = this;
+
+    var async = args.length + 1
+      , layers = supply[what];
+
+    (function loop(i) {
+      if (i === layers.length) return fn();
+
+      var layer = layers[i]
+        , async = layer.length === l;
+
+      function next(err) {
+        if (err) return fn(err);
+        loop(i++);
+      }
+
+      //
+      // Optimize 1, 2 and 3 arguments. All others will get a bigger performance
+      // hit.
+      //
+      switch (l) {
+        case 1:
+          if (async) return layer.fn.call(layer.context, a, next);
+          return layer.fn.call(layer.context, a) !== true && loop(i++);
+        case 2:
+          if (async) return layer.fn.call(layer.context, a, b, next);
+          return layer.fn.call(layer.context, a, b) !== true && loop(i++);
+        case 3:
+          if (async) return layer.fn.call(layer.context, a, b, c, next);
+          return layer.fn.call(layer.context, a, b, c) !== true && loop(i++);
+      }
+
+      //
+      // This is a much slower layer invocation as we have to use function.apply
+      // to get the correct argument set and with an async function we need to
+      // concat the arguments so we can correctly add the next callback.
+      //
+      if (async) return layer.fn.apply(layer.context, args.concat(next));
+      return layer.fn.apply(layer.context, args) !== true && loop(i++);
+    })(0);
+
+    return supply;
+  };
+
+  //
+  // Expose the Layer constructor.
+  //
+  Supply.Layer = Supply.Layer || Layer;
+
+  return Supply;
+};
+
+supply.plugin = function plugin(Supply, options) {
+  options = options || {};
+
+  //
+  // Allow customization of the API names.
+  //
+  options.run = options.run || 'each';
+  options.add = options.add || 'plugin';
+  options.remove = options.remove || 'unplug';
+
+  /**
+   *
+   * @param {String} name Name of the layer we wish to add.
+   * @param {Object} obj Specification of the plugin.
+   * @param {Object} options Plugin configuration.
+   * @returns {Supply}
+   * @api public
+   */
+  Supply.prototype[options.add] = function plugin(name, obj, options) {
+    if (!this._plugin) this._plugin = [];
+    if (!obj) return this._plugin[index(this._plugin, name)];
+
+    options = options || {};
+
+    options.index = 'index' in options ? +options.index : this._before.length;
+    options.context = options.context || this;
+
+    if (options.before) options.index = index(this._before, options.before);
+    if (options.index > this._before.length) options.index = this._before.length;
+
+    var spec = new Specification(name, obj, options.context);
+
+    if (this.emit) this.emit(options.add, spec, options);
+    this._plugin.splice(options.index, 0, spec);
+
+    return this;
+  };
+
+  /**
+   * Removes the plugin from the stack.
+   *
+   * @param {String} name Name of the layer we wish to remove.
+   * @returns {Boolean} Indication of successful removal.
+   * @api public
+   */
+  Supply.prototype[options.remove] = function unplug(name) {
+    var i = index(this._plugin, name);
+    if (i === -1) return false;
+
+    this.emit(options.remove, this._plugin.splice(i, 1));
+    return true;
+  };
+
+  //
+  // Expose the plugin specification.
+  //
+  Supply.Specification = Supply.Specification || Specification;
+
+  return Supply;
+};
+
 /**
  * Find the index an object which has the given name.
  *
@@ -74,175 +275,3 @@ function Specification(name, obj, context) {
   this.fn = obj.server;
   this.name = name;
 }
-
-function Supply() {
-  /* Pointless function, like an empty glass of beer. */
-}
-
-Supply.prototype.__proto__ = require('eventemitter3').prototype;
-
-/**
- * @param {String} name Name of the layer we wish to add.
- * @param {Object} obj Specification of the plugin.
- */
-Supply.prototype.plugin = function plugin(name, obj, options) {
-  if (!this._plugin) this._plugin = [];
-  if (!obj) return this._plugin[index(this._plugin, name)];
-
-  options = options || {};
-
-  options.index = 'index' in options ? +options.index : this._before.length;
-  options.context = options.context || this;
-
-  if (options.before) options.index = index(this._before, options.before);
-  if (options.index > this._before.length) options.index = this._before.length;
-
-  var spec = new Specification(name, obj, options.context);
-
-  this.emit('plugin', spec, options);
-  this._plugin.splice(options.index, 0, spec);
-
-  return this;
-};
-
-/**
- * Removes the plugin from the stack.
- *
- * @param {String} name Name of the layer we wish to remove.
- * @returns {Boolean} Indication of successful removal.
- * @api public
- */
-Supply.prototype.unplug = Supply.prototype.plugout = function unplug(name) {
-  var i = index(this._plugin, name);
-  if (i === -1) return false;
-
-  this.emit('unplug', this._plugin.splice(i, 1));
-  return true;
-};
-
-/**
- * Add or retrieve a middleware layer. If no function argument is given we
- * assume that you want to retrieve a middleware layer that matches the given
- * name.
- *
- * If you do supply it with a function argument we assume that you wish to
- * register this middleware layer for the given name. When adding a new layer
- * you can supply the following options:
- *
- * - `index` The position of the middleware layer where we should add it.
- * - `before` Name of a middleware layer that you want to run this before.
- * - `context` Function execution context.
- *
- * @param {String} name Name of the layer we wish to add.
- * @param {Function} fn Middleware layer.
- * @param {Object} options Middleware layer configuration.
- * @returns {Supply|Layer}
- * @api public
- */
-Supply.prototype.before = function before(name, fn, options) {
-  if (!this._before) this._before = [];
-  if (!fn) return this._before[index(this._before, name)];
-
-  options = options || {};
-
-  options.index = 'index' in options ? +options.index : this._before.length;
-  options.context = options.context || this;
-
-  if (options.before) options.index = index(this._before, options.before);
-  if (options.index > this._before.length) options.index = this._before.length;
-
-  var layer = new Layer(name, fn, options);
-
-  this.emit('before', layer, options);
-  this._before.splice(options.index, 0, layer);
-
-  return this;
-};
-
-/**
- * Removes the middleware from the stack.
- *
- * @param {String} name Name of the layer we wish to remove.
- * @returns {Boolean} Indication of successful removal.
- * @api public
- */
-Supply.prototype.remove = function remove(name) {
-  var i = index(this._plugin, name);
-  if (i === -1) return false;
-
-  this.emit('unplug', this._plugin.splice(i, 1));
-  return true;
-};
-
-/**
- * Iterate and execute all middleware layers with the given set of arguments.
- *
- * @param {String} what Before or plugin we're executing.
- * @Argument {Mixed} .. Arguments that need to be supplied to the layers.
- * @param {Function} fn Completion callback.
- * @returns {Supply}
- * @api public
- */
-Supply.prototype.each = function each(what, a, b, c, d) {
-  what = '_'+ what;
-  if (!this[what] || !this[what].length) return fn(), supply;
-
-  //
-  // Create a copy of the arguments to prevent argument leaking in the loop
-  // closure.
-  //
-  for (var i = 1, l = arguments.length - 1, args = new Array(l); i < l; i++) {
-    args[i - 1] = arguments[i];
-  }
-
-  var fn = arguments[l]
-    , supply = this;
-
-  var async = args.length + 1
-    , layers = supply[what];
-
-  (function loop(i) {
-    if (i === layers.length) return fn();
-
-    var layer = layers[i]
-      , async = layer.length === l;
-
-    function next(err) {
-      if (err) return fn(err);
-      loop(i++);
-    }
-
-    //
-    // Optimize 1, 2 and 3 arguments. All others will get a bigger performance
-    // hit.
-    //
-    switch (l) {
-      case 1:
-        if (async) return layer.fn.call(layer.context, a, next);
-        return layer.fn.call(layer.context, a) !== true && loop(i++);
-      case 2:
-        if (async) return layer.fn.call(layer.context, a, b, next);
-        return layer.fn.call(layer.context, a, b) !== true && loop(i++);
-      case 3:
-        if (async) return layer.fn.call(layer.context, a, b, c, next);
-        return layer.fn.call(layer.context, a, b, c) !== true && loop(i++);
-    }
-
-    //
-    // This is a much slower layer invocation as we have to use function.apply
-    // to get the correct argument set and with an async function we need to
-    // concat the arguments so we can correctly add the next callback.
-    //
-    if (async) return layer.fn.apply(layer.context, args.concat(next));
-    return layer.fn.apply(layer.context, args) !== true && loop(i++);
-  })(0);
-
-  return supply;
-};
-
-//
-// Expose the module.
-//
-Supply.Specification = Specification;
-Supply.Layer = Layer;
-module.exports = Supply;
