@@ -2,15 +2,15 @@
 
 var supply = module.exports;
 
-supply.middleware = function middleware(Supply, options) {
-  options = options || {};
+supply.middleware = function middleware(Supply, methods) {
+  methods = methods || {};
 
   //
   // Allow customization of the API names.
   //
-  options.run = options.run || 'each';
-  options.add = options.add || 'before';
-  options.remove = options.remove || 'remove';
+  methods.run = methods.run || 'each';
+  methods.add = methods.add || 'before';
+  methods.remove = methods.remove || 'remove';
 
   /**
    * Add or retrieve a middleware layer. If no function argument is given we
@@ -31,7 +31,7 @@ supply.middleware = function middleware(Supply, options) {
    * @returns {Supply|Layer}
    * @api public
    */
-  Supply.prototype[options.add] = function before(name, fn, options) {
+  Supply.prototype[methods.add] = function before(name, fn, options) {
     if (!this._before) this._before = [];
     if (!fn) return this._before[index(this._before, name)];
 
@@ -45,7 +45,7 @@ supply.middleware = function middleware(Supply, options) {
 
     var layer = new Layer(name, fn, options);
 
-    if (this.emit) this.emit(options.add, layer, options);
+    if (this.emit) this.emit(methods.add, layer, options);
     this._before.splice(options.index, 0, layer);
 
     return this;
@@ -58,11 +58,11 @@ supply.middleware = function middleware(Supply, options) {
    * @returns {Boolean} Indication of successful removal.
    * @api public
    */
-  Supply.prototype[options.remove] = function remove(name) {
+  Supply.prototype[methods.remove] = function remove(name) {
     var i = index(this._plugin, name);
     if (i === -1) return false;
 
-    this.emit(options.remove, this._plugin.splice(i, 1));
+    if (this.emit) this.emit(methods.remove, this._plugin.splice(i, 1));
     return true;
   };
 
@@ -75,7 +75,7 @@ supply.middleware = function middleware(Supply, options) {
    * @returns {Supply}
    * @api public
    */
-  Supply.prototype[options.run] = function each(what, a, b, c, d) {
+  Supply.prototype[methods.run] = function each(what, a, b, c, d) {
     what = '_'+ what;
     if (!this[what] || !this[what].length) return fn(), this;
 
@@ -140,15 +140,15 @@ supply.middleware = function middleware(Supply, options) {
   return Supply;
 };
 
-supply.plugin = function plugin(Supply, options) {
-  options = options || {};
+supply.plugin = function plugin(Supply, methods) {
+  methods = methods || {};
 
   //
   // Allow customization of the API names.
   //
-  options.run = options.run || 'each';
-  options.add = options.add || 'plugin';
-  options.remove = options.remove || 'unplug';
+  methods.run = methods.run || 'each';
+  methods.add = methods.add || 'plugin';
+  methods.remove = methods.remove || 'unplug';
 
   /**
    *
@@ -158,7 +158,7 @@ supply.plugin = function plugin(Supply, options) {
    * @returns {Supply}
    * @api public
    */
-  Supply.prototype[options.add] = function plugin(name, obj, options) {
+  Supply.prototype[methods.add] = function plugin(name, obj, options) {
     if (!this._plugin) this._plugin = [];
     if (!obj) return this._plugin[index(this._plugin, name)];
 
@@ -172,7 +172,7 @@ supply.plugin = function plugin(Supply, options) {
 
     var spec = new Specification(name, obj, options.context);
 
-    if (this.emit) this.emit(options.add, spec, options);
+    if (this.emit) this.emit(methods.add, spec, options);
     this._plugin.splice(options.index, 0, spec);
 
     return this;
@@ -185,11 +185,11 @@ supply.plugin = function plugin(Supply, options) {
    * @returns {Boolean} Indication of successful removal.
    * @api public
    */
-  Supply.prototype[options.remove] = function unplug(name) {
+  Supply.prototype[methods.remove] = function unplug(name) {
     var i = index(this._plugin, name);
     if (i === -1) return false;
 
-    this.emit(options.remove, this._plugin.splice(i, 1));
+    if (this.emit) this.emit(methods.remove, this._plugin.splice(i, 1));
     return true;
   };
 
