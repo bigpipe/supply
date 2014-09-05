@@ -1,0 +1,37 @@
+{
+  "name": "supply",
+  "version": "0.0.0",
+  "description": "Supply your library with plugin and middleware management",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bigpipe/supply"
+  },
+  "keywords": [
+    "supply",
+    "middleware",
+    "ware",
+    "layer",
+    "union",
+    "layers",
+    "stack",
+    "middle",
+    "connect",
+    "compose",
+    "express",
+    "flatiron"
+  ],
+  "author": "Arnout Kazemier",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bigpipe/supply/issues"
+  },
+  "devDependencies": {
+    "assume": "0.0.x",
+    "mocha": "1.21.x",
+    "pre-commit": "0.0.x"
+  }
+}
