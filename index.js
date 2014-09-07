@@ -75,33 +75,33 @@ supply.middleware = function middleware(Supply, methods) {
    * @returns {Supply}
    * @api public
    */
-  Supply.prototype[methods.run] = function each(what, a, b, c, d) {
-    what = '_'+ what;
-    if (!this[what] || !this[what].length) return fn(), this;
+  Supply.prototype[methods.run] = function each(a, b, c, d) {
+    if (!this._before || !this._before.length) {
+      return arguments[arguments.length - 1](), this;
+    }
 
     //
     // Create a copy of the arguments to prevent argument leaking in the loop
     // closure.
     //
-    for (var i = 1, l = arguments.length - 1, args = new Array(l); i < l; i++) {
-      args[i - 1] = arguments[i];
+    for (var i = 0, l = arguments.length - 1, args = new Array(l); i < l; i++) {
+      args[i] = arguments[i];
     }
 
-    var fn = arguments[l]
+    var callback = arguments.length
+      , layers = this._before
+      , fn = arguments[l]
       , supply = this;
-
-    var async = args.length + 1
-      , layers = supply[what];
 
     (function loop(i) {
       if (i === layers.length) return fn();
 
       var layer = layers[i]
-        , async = layer.length === l;
+        , async = layer.length === callback;
 
       function next(err) {
         if (err) return fn(err);
-        loop(i++);
+        loop(++i);
       }
 
       //
@@ -109,15 +109,18 @@ supply.middleware = function middleware(Supply, methods) {
       // hit.
       //
       switch (l) {
+        case 0:
+          if (async) return layer.fn.call(layer.context, next);
+          return layer.fn.call(layer.context) !== true && loop(++i);
         case 1:
           if (async) return layer.fn.call(layer.context, a, next);
-          return layer.fn.call(layer.context, a) !== true && loop(i++);
+          return layer.fn.call(layer.context, a) !== true && loop(++i);
         case 2:
           if (async) return layer.fn.call(layer.context, a, b, next);
-          return layer.fn.call(layer.context, a, b) !== true && loop(i++);
+          return layer.fn.call(layer.context, a, b) !== true && loop(++i);
         case 3:
           if (async) return layer.fn.call(layer.context, a, b, c, next);
-          return layer.fn.call(layer.context, a, b, c) !== true && loop(i++);
+          return layer.fn.call(layer.context, a, b, c) !== true && loop(++i);
       }
 
       //
@@ -126,7 +129,7 @@ supply.middleware = function middleware(Supply, methods) {
       // concat the arguments so we can correctly add the next callback.
       //
       if (async) return layer.fn.apply(layer.context, args.concat(next));
-      return layer.fn.apply(layer.context, args) !== true && loop(i++);
+      return layer.fn.apply(layer.context, args) !== true && loop(++i);
     })(0);
 
     return supply;

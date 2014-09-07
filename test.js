@@ -100,8 +100,6 @@ describe('supply', function () {
         var called = 0;
 
         s.before('cow', function cow(next) {
-          assume(next).is.a('function');
-
           called++;
           next();
         });
@@ -116,9 +114,8 @@ describe('supply', function () {
 
       it('receives the supplied arguments', function (next) {
         s.before('cow', function (a, b, next) {
-          assume(next).is.a('function');
-          assume(a).equals('foo');
-          assume(b).equals('bar');
+          assume(a).equal('foo');
+          assume(b).equal('bar');
 
           next();
         });
@@ -161,7 +158,7 @@ describe('supply', function () {
         });
 
         s.each(function (err) {
-          assume(err).is.instanceOf('error');
+          assume(err).is.instanceOf(Error);
           assume(err.message).to.equal('foo');
 
           assume(pattern).equal('bar');
