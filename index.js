@@ -112,12 +112,15 @@ supply.middleware = function middleware(Supply, methods) {
         case 0:
           if (async) return layer.fn.call(layer.context, next);
           return layer.fn.call(layer.context) !== true && loop(++i);
+
         case 1:
           if (async) return layer.fn.call(layer.context, a, next);
           return layer.fn.call(layer.context, a) !== true && loop(++i);
+
         case 2:
           if (async) return layer.fn.call(layer.context, a, b, next);
           return layer.fn.call(layer.context, a, b) !== true && loop(++i);
+
         case 3:
           if (async) return layer.fn.call(layer.context, a, b, c, next);
           return layer.fn.call(layer.context, a, b, c) !== true && loop(++i);
