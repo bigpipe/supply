@@ -2,6 +2,15 @@
 
 var supply = module.exports;
 
+/**
+ * Supply the given function constructor with middleware processing
+ * functionality.
+ *
+ * @param {Function} Supply The function who's prototype we need to extend.
+ * @param {Object} methods Optional prototype name mapping.
+ * @returns {Function} Supply
+ * @api public
+ */
 supply.middleware = function middleware(Supply, methods) {
   methods = methods || {};
 
@@ -146,6 +155,15 @@ supply.middleware = function middleware(Supply, methods) {
   return Supply;
 };
 
+/**
+ * Supply the given function constructor with plugin processing
+ * functionality.
+ *
+ * @param {Function} Supply The function who's prototype we need to extend.
+ * @param {Object} methods Optional prototype name mapping.
+ * @returns {Function} Supply
+ * @api public
+ */
 supply.plugin = function plugin(Supply, methods) {
   methods = methods || {};
 
@@ -157,6 +175,7 @@ supply.plugin = function plugin(Supply, methods) {
   methods.remove = methods.remove || 'unplug';
 
   /**
+   * Add a new plugin.
    *
    * @param {String} name Name of the layer we wish to add.
    * @param {Object} obj Specification of the plugin.
@@ -205,6 +224,33 @@ supply.plugin = function plugin(Supply, methods) {
   Supply.Specification = Supply.Specification || Specification;
 
   return Supply;
+};
+
+/**
+ * Detect how we can add middleware layers to the supplied server. The different
+ *
+ * @param {Server} server HTTP/S server instance with a middleware system.
+ * @param {String} name Name of the middleware layer.
+ * @param {Function} fn Middleware we need to add.
+ * @param {Object} Options Detection options.
+ * @returns {Boolean} Successful add of the middleware.
+ * @api public
+ */
+supply.detect = function detect(server, name, fn, options) {
+  options = options || {};
+  options.add = options.add || 'before,use';
+  options.add = options.add.split(',');
+
+  if (options.connect) return server.use(fn), true;
+
+  return options.add.some(function some(method) {
+    if ('function' !== server[method]) return false;
+
+    if (server[method].length === 1) server[method](fn);
+    else server[method](name, fn, options);
+
+    return true;
+  });
 };
 
 /**
