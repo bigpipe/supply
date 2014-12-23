@@ -97,6 +97,26 @@ describe('supply', function () {
       assume(supply.layers.pop().name).equals('jam');
       assume(supply.layers.shift().name).equals('bek');
     });
+
+    it('can insert a specified index', function () {
+      supply.use('foo', function () {});
+      supply.use('bar', function () {});
+      supply.use('pez', function () {});
+      supply.use('jam', function () {});
+
+      supply.use('bek', function () {}, { at: 2 });
+      assume(supply.layers[2].name).equals('bek');
+    });
+
+    it('can insert a specified index', function () {
+      supply.use('foo', function () {});
+      supply.use('bar', function () {});
+      supply.use('pez', function () {});
+      supply.use('jam', function () {});
+
+      supply.use('bek', function () {}, { at: 'bar' });
+      assume(supply.layers[1].name).equals('bek');
+    });
   });
 
   describe('#before', function () {
@@ -104,10 +124,12 @@ describe('supply', function () {
       supply.use('foo', function () {});
       supply.use('hi', function () {});
       supply.use('bar', function () {});
+      supply.before(function mom() {});
       supply.before('pez', function () {});
 
       assume(supply.layers.pop().name).equals('bar');
       assume(supply.layers.shift().name).equals('pez');
+      assume(supply.layers.shift().name).equals('mom');
     });
   });
 
@@ -116,9 +138,11 @@ describe('supply', function () {
       supply.use('foo', function () {});
       supply.use('hi', function () {});
       supply.use('bar', function () {});
+      supply.after(function mom() {});
       supply.after('pez', function () {});
 
       assume(supply.layers.pop().name).equals('pez');
+      assume(supply.layers.pop().name).equals('mom');
     });
   });
 

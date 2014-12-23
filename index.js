@@ -117,7 +117,7 @@ Supply.prototype.use = function use(name, fn, opts) {
 
   if ('string' === typeof opts.at) opts.at = this.indexOf(opts.at);
   if (opts.at > this.layers.length) opts.at = this.layers.length;
-  if (opts.at < this.layers.length) opts.at = 0;
+  if (opts.at < 0) opts.at = 0;
 
   var layer = new Layer(name, fn, opts);
   this.layers.splice(opts.at, 0, layer);
