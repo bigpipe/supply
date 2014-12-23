@@ -1,13 +1,15 @@
 describe('supply', function () {
   'use strict';
 
-  var assume = require('assume')
-    , provider = { foo: 'bar'}
+  var EventEmitter = require('events').EventEmitter
+    , assume = require('assume')
     , Supply = require('./')
+    , eventemitter
     , supply;
 
   beforeEach(function () {
-    supply = new Supply(provider);
+    eventemitter = new EventEmitter();
+    supply = new Supply(eventemitter);
   });
 
   afterEach(function () {
@@ -61,6 +63,41 @@ describe('supply', function () {
 
       assume(supply.layers[0].name).equals('foo');
       assume(supply.layers[1].name).equals('bar');
+    });
+
+    it('normalizes an out of bound at to last', function () {
+      supply.use('foo', function () {});
+      supply.use('bar', function () {});
+      supply.use('pez', function () {});
+      supply.use('jam', function () {});
+
+      supply.use('bek', function () {}, { at: 79789879 });
+      assume(supply.layers.pop().name).equals('bek');
+    });
+
+    it('normalizes negative at to first', function () {
+      supply.use('foo', function () {});
+      supply.use('bar', function () {});
+      supply.use('pez', function () {});
+      supply.use('jam', function () {});
+
+      supply.use('bek', function () {}, { at: -100 });
+      assume(supply.layers.pop().name).equals('jam');
+      assume(supply.layers.shift().name).equals('bek');
+    });
+  });
+
+  describe('#destroy', function () {
+    it('returns true on the first destruction', function () {
+      assume(supply.destroy()).is.true();
+    });
+
+    it('returns false on the second destruction', function () {
+      assume(supply.destroy()).is.true();
+
+      assume(supply.destroy()).is.false();
+      assume(supply.destroy()).is.false();
+      assume(supply.destroy()).is.false();
     });
   });
 });
