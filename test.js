@@ -20,6 +20,18 @@ describe('supply', function () {
     assume(Supply.extend).is.a('function');
   });
 
+  it('can be constructed without arguments', function () {
+    supply.destroy();
+    supply = new Supply();
+  });
+
+  it('can be constructed without new', function () {
+    supply.destroy();
+    supply = Supply();
+
+    assume(supply).is.instanceOf(Supply);
+  });
+
   describe('#use', function () {
     it('extracts the name from the function', function () {
       supply.use(function foobar() {});
@@ -84,6 +96,49 @@ describe('supply', function () {
       supply.use('bek', function () {}, { at: -100 });
       assume(supply.layers.pop().name).equals('jam');
       assume(supply.layers.shift().name).equals('bek');
+    });
+  });
+
+  describe('#before', function () {
+    it('adds layers before all others', function () {
+      supply.use('foo', function () {});
+      supply.use('hi', function () {});
+      supply.use('bar', function () {});
+      supply.before('pez', function () {});
+
+      assume(supply.layers.pop().name).equals('bar');
+      assume(supply.layers.shift().name).equals('pez');
+    });
+  });
+
+  describe('#after', function () {
+    it('adds layers as last', function () {
+      supply.use('foo', function () {});
+      supply.use('hi', function () {});
+      supply.use('bar', function () {});
+      supply.after('pez', function () {});
+
+      assume(supply.layers.pop().name).equals('pez');
+    });
+  });
+
+  describe('#indexOf', function () {
+    it('return -1 if the layer is not found', function () {
+      supply.use('foo', function () {});
+
+      assume(supply.indexOf('afaf')).equals(-1);
+    });
+
+    it('returns the index of the layers', function () {
+      supply.use('foo', function () {});
+      supply.use('bar', function () {});
+      supply.use('pez', function () {});
+      supply.use('jam', function () {});
+
+      assume(supply.indexOf('foo')).equals(0);
+      assume(supply.indexOf('bar')).equals(1);
+      assume(supply.indexOf('pez')).equals(2);
+      assume(supply.indexOf('jam')).equals(3);
     });
   });
 
