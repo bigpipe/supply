@@ -1,3 +1,4 @@
+/* istanbul ignore next */
 describe('supply', function () {
   'use strict';
 
@@ -206,6 +207,81 @@ describe('supply', function () {
 
       supply.use('foo', lol);
       supply.remove('foo');
+    });
+  });
+
+  describe('#each', function () {
+    it('iterates over all middleware using sync calls', function (next) {
+      next = assume.plan(3, next);
+
+      supply.use('foo', function (data) { assume(data).equals('ok'); });
+      supply.use('bar', function (data) { assume(data).equals('ok'); });
+      supply.use('baz', function (data) { assume(data).equals('ok'); });
+
+      supply.each('ok', next);
+    });
+
+    it('iterates over all middleware using async calls', function (next) {
+      next = assume.plan(3, next);
+
+      supply.use('foo', function (data, ok) { assume(data).equals('ok'); ok(); });
+      supply.use('bar', function (data, ok) { assume(data).equals('ok'); ok(); });
+      supply.use('baz', function (data, ok) { assume(data).equals('ok'); ok(); });
+
+      supply.each('ok', next);
+    });
+
+    it('bails out when a sync call thows error', function (next) {
+      supply.use(function sync(arg) {
+        throw new Error('everything');
+      });
+
+      supply.each('ok', function (err) {
+        assume(err.message).equals('everything');
+        next();
+      });
+    });
+
+    it('bails out when an async call returns error', function (next) {
+      supply.use(function sync(arg, ok) {
+        setTimeout(function () {
+          ok(new Error('everything'));
+        }, 10);
+      });
+
+      supply.each('ok', function (err) {
+        assume(err.message).equals('everything');
+        next();
+      });
+    });
+
+    it('stops execution when sync call returns true', function (next) {
+      supply.use(function sync(arg) {
+        return true;
+      });
+
+      supply.use(function () {
+        throw new Error('I should never get here');
+      });
+
+      supply.each('ok', next);
+    });
+
+    it('stops execution when sync call returns true', function (next) {
+      supply.use(function sync(arg, ok) {
+        ok(undefined, true);
+      });
+
+      supply.use(function (arg, ok) {
+        throw new Error('I should never get here');
+      });
+
+      supply.each('ok', next);
+    });
+
+    it('has an optional callback', function () {
+      supply.use(function (arg) { });
+      supply.each('ok');
     });
   });
 
