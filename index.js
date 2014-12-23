@@ -48,7 +48,7 @@ Supply.prototype.remove = function remove(name) {
 
   if (i === -1) return false;
 
-  layer = this.layers.splice(i, 1);
+  layer = this.layers.splice(i, 1)[0];
 
   this.length--;
   if (this.provider.emit) this.provider.emit('remove', layer);

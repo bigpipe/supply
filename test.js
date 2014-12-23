@@ -131,6 +131,15 @@ describe('supply', function () {
       assume(supply.layers.shift().name).equals('pez');
       assume(supply.layers.shift().name).equals('mom');
     });
+
+    it('emits an `use` event', function lol(next) {
+      eventemitter.once('use', function (layer) {
+        assume(layer.fn).equals(lol);
+        next();
+      });
+
+      supply.use('foo', lol);
+    });
   });
 
   describe('#after', function () {
@@ -163,6 +172,40 @@ describe('supply', function () {
       assume(supply.indexOf('bar')).equals(1);
       assume(supply.indexOf('pez')).equals(2);
       assume(supply.indexOf('jam')).equals(3);
+    });
+  });
+
+  describe('#remove', function () {
+    it('decrements the layers', function () {
+      assume(supply.length).equals(0);
+
+      supply.use('foo', function () {});
+      assume(supply.length).equals(1);
+      assume(supply.layers.length).equals(1);
+
+      supply.remove('foo');
+      assume(supply.length).equals(0);
+      assume(supply.layers.length).equals(0);
+    });
+
+    it('only removes known layers', function () {
+      supply.use('foo', function () {});
+      assume(supply.length).equals(1);
+
+      supply.remove('bar');
+      assume(supply.length).equals(1);
+      assume(supply.layers.length).equals(1);
+    });
+
+    it('emits a `remove` event', function lol(next) {
+      eventemitter.once('remove', function (layer) {
+        assume(layer.fn).equals(lol);
+
+        next();
+      });
+
+      supply.use('foo', lol);
+      supply.remove('foo');
     });
   });
 
