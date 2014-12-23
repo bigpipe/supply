@@ -185,6 +185,7 @@ Supply.prototype.each = function each() {
   }
 
   length = args.length;
+  i = 0;
   next();
 
   return this.provider;
