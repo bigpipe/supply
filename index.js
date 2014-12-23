@@ -12,9 +12,8 @@ var dollars = require('dollars')
  * @param {Mixed} context Execution context of the function.
  * @api private
  */
-function Layer(name, fn, context) {
+function Layer(name, fn) {
   this.length = fn.length;
-  this.context = context;
   this.name = name;
   this.fn = fn;
 }
@@ -72,7 +71,7 @@ Supply.prototype.before = function before(name, fn, opts) {
     name = display(name);
   }
 
-  return this.use(name, fn, dollars.concat(opts || {}, {
+  return this.use(name, fn, dollars.object.concat(opts || {}, {
     at: 0
   }));
 };
@@ -92,7 +91,7 @@ Supply.prototype.after = function after(name, fn, opts) {
     name = display(name);
   }
 
-  return this.use(name, fn, dollars.concat(opts || {}, {
+  return this.use(name, fn, dollars.object.concat(opts || {}, {
     at: this.layers.length
   }));
 };
@@ -112,8 +111,16 @@ Supply.prototype.use = function use(name, fn, opts) {
     name = display(name);
   }
 
+  opts = dollars.object.concat({
+    at: this.layers.length
+  }, opts || {});
+
+  if ('string' === typeof opts.at) opts.at = this.indexOf(opts.at);
+  if (opts.at > this.layers.length) opts.at = this.layers.length;
+  if (opts.at < this.layers.length) opts.at = 0;
+
   var layer = new Layer(name, fn, opts);
-  this.layer.splice(opts.at, 0, fn);
+  this.layers.splice(opts.at, 0, layer);
 
   this.length++;
   if (this.provider.emit) this.provider.emit('use', layer);
@@ -181,6 +188,20 @@ Supply.prototype.each = function each() {
   next();
 
   return this.provider;
+};
+
+/**
+ * Completely destroy the instance and nuke all references.
+ *
+ * @returns {Boolean}
+ * @api public
+ */
+Supply.prototype.destroy = function supply() {
+  if (!this.layers) return false;
+
+  this.layers = this.provider = null;
+
+  return true;
 };
 
 //
