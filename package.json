@@ -40,6 +40,7 @@
   },
   "dependencies": {
     "dollars": "0.0.x",
-    "extendible": "0.1.x"
+    "extendible": "0.1.x",
+    "fn.name": "1.0.1"
   }
 }

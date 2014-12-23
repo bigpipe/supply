@@ -1,6 +1,7 @@
 'use strict';
 
-var dollars = require('dollars');
+var dollars = require('dollars')
+  , display = require('fn.name');
 
 /**
  * Representation of a single middleware layer.
@@ -28,8 +29,9 @@ function Layer(name, fn, context) {
 function Supply(provider) {
   if (!this) return new Supply();
 
+  this.provider = provider || this;
   this.layers = [];
-  this.provider = provider;
+  this.length = 0;
 }
 
 Supply.extend = require('extendible');
@@ -48,11 +50,76 @@ Supply.prototype.remove = function remove(name) {
   if (i === -1) return false;
 
   layer = this.layers.splice(i, 1);
+
+  this.length--;
   if (this.provider.emit) this.provider.emit('remove', layer);
 
   return true;
 };
 
+/**
+ * Add a new middleware layer at the beginning of the stack.
+ *
+ * @param {String} name Middleware name
+ * @param {Function} fn Function to execute
+ * @param {Object} opts Additional middleware configuration.
+ * @returns {Provider|Supply}
+ * @api public
+ */
+Supply.prototype.before = function before(name, fn, opts) {
+  if ('function' === typeof name) {
+    fn = name;
+    name = display(name);
+  }
+
+  return this.use(name, fn, dollars.concat(opts || {}, {
+    at: 0
+  }));
+};
+
+/**
+ * Add a new middleware layer at the end of the stack.
+ *
+ * @param {String} name Middleware name
+ * @param {Function} fn Function to execute
+ * @param {Object} opts Additional middleware configuration.
+ * @returns {Provider|Supply}
+ * @api public
+ */
+Supply.prototype.after = function after(name, fn, opts) {
+  if ('function' === typeof name) {
+    fn = name;
+    name = display(name);
+  }
+
+  return this.use(name, fn, dollars.concat(opts || {}, {
+    at: this.layers.length
+  }));
+};
+
+/**
+ * Add a new middleware layer to the stack.
+ *
+ * @param {String} name Middleware name
+ * @param {Function} fn Function to execute
+ * @param {Object} opts Additional middleware configuration.
+ * @returns {Provider|Supply}
+ * @api public
+ */
+Supply.prototype.use = function use(name, fn, opts) {
+  if ('function' === typeof name) {
+    fn = name;
+    name = display(name);
+  }
+
+  var layer = new Layer(name, fn, opts);
+  this.layer.splice(opts.at, 0, fn);
+
+  this.length++;
+  if (this.provider.emit) this.provider.emit('use', layer);
+
+  return this.provider;
+};
 
 /**
  * Find the index an object which has the given name.
@@ -113,7 +180,7 @@ Supply.prototype.each = function each() {
   length = args.length;
   next();
 
-  return supply;
+  return this.provider;
 };
 
 //
