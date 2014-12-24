@@ -236,8 +236,10 @@ describe('supply', function () {
         }, 10);
       });
 
-      supply.each('ok', function (err) {
+      supply.each('ok', function (err, early) {
         assume(err.message).equals('everything');
+        assume(early).is.false();
+
         next();
       });
     });
@@ -251,7 +253,12 @@ describe('supply', function () {
         throw new Error('I should never get here');
       });
 
-      supply.each('ok', next);
+      supply.each('ok', function (err, early) {
+        if (err) return next(err);
+
+        assume(early).is.true();
+        next();
+      });
     });
 
     it('stops execution when sync call returns true', function (next) {
@@ -263,7 +270,12 @@ describe('supply', function () {
         throw new Error('I should never get here');
       });
 
-      supply.each('ok', next);
+      supply.each('ok', function (err, early) {
+        if (err) return next(err);
+
+        assume(early).is.true();
+        next();
+      });
     });
 
     it('has an optional callback', function () {

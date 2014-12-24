@@ -157,7 +157,7 @@ Supply.prototype.each = function each() {
   function next(err, done) {
     var layer = supply.layers[i++];
 
-    if (err || done || !layer) return fn(err);
+    if (err || done || !layer) return fn(err, !!done);
 
     if (layer.length > length) return layer.fn.apply(null, args.concat(next));
     else dollars.catch(function catching() {
