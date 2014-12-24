@@ -143,19 +143,6 @@ describe('supply', function () {
     });
   });
 
-  describe('#after', function () {
-    it('adds layers as last', function () {
-      supply.use('foo', function () {});
-      supply.use('hi', function () {});
-      supply.use('bar', function () {});
-      supply.after(function mom() {});
-      supply.after('pez', function () {});
-
-      assume(supply.layers.pop().name).equals('pez');
-      assume(supply.layers.pop().name).equals('mom');
-    });
-  });
-
   describe('#indexOf', function () {
     it('return -1 if the layer is not found', function () {
       supply.use('foo', function () {});

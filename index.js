@@ -34,6 +34,7 @@ function Supply(provider) {
 }
 
 Supply.extend = require('extendible');
+Supply.Layer = Layer;
 
 /**
  * Removes the middleware from the stack.
@@ -73,26 +74,6 @@ Supply.prototype.before = function before(name, fn, opts) {
 
   return this.use(name, fn, dollars.object.concat(opts || {}, {
     at: 0
-  }));
-};
-
-/**
- * Add a new middleware layer at the end of the stack.
- *
- * @param {String} name Middleware name
- * @param {Function} fn Function to execute
- * @param {Object} opts Additional middleware configuration.
- * @returns {Provider|Supply}
- * @api public
- */
-Supply.prototype.after = function after(name, fn, opts) {
-  if ('function' === typeof name) {
-    fn = name;
-    name = display(name);
-  }
-
-  return this.use(name, fn, dollars.object.concat(opts || {}, {
-    at: this.layers.length
   }));
 };
 
