@@ -159,9 +159,9 @@ Supply.prototype.each = function each() {
 
     if (err || done || !layer) return fn(err, !!done);
 
-    if (layer.length > length) return layer.fn.apply(null, args.concat(next));
+    if (layer.length > length) return layer.fn.apply(supply.provider, args.concat(next));
     else dollars.catch(function catching() {
-      return layer.fn.apply(null, args);
+      return layer.fn.apply(supply.provider, args);
     }, next);
   }
 

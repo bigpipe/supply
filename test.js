@@ -218,6 +218,25 @@ describe('supply', function () {
       supply.each('ok', next);
     });
 
+    it('calls middleware in scope of the provider', function (next) {
+      next = assume.plan(4, next);
+
+      supply.provider.test = 'value';
+
+      supply.use('baz', function (data) {
+        assume(data).equals('ok');
+        assume(this.test).equals('value');
+      });
+
+      supply.use('bar', function (data, ok) {
+        assume(data).equals('ok');
+        assume(this.test).equals('value');
+        ok();
+      });
+
+      supply.each('ok', next);
+    });
+
     it('bails out when a sync call thows error', function (next) {
       supply.use(function sync(arg) {
         throw new Error('everything');
