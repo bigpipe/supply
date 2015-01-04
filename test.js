@@ -33,6 +33,17 @@ describe('supply', function () {
     assume(supply).is.instanceOf(Supply);
   });
 
+  it('calls the supplied initialize method when contructed', function (next) {
+    var MySupply = Supply.extend({
+      initialize: function initialize(options) {
+        assume(options).is.a('object');
+        next();
+      }
+    });
+
+    new MySupply();
+  });
+
   describe('#use', function () {
     it('extracts the name from the function', function () {
       supply.use(function foobar() {});
