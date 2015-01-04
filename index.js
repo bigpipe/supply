@@ -58,7 +58,9 @@ Supply.prototype.remove = function remove(name) {
   layer = this.layers.splice(i, 1)[0];
 
   this.length--;
-  if (this.provider.emit) this.provider.emit('remove', layer);
+  if (this.provider.emit) {
+    this.provider.emit('remove', layer);
+  }
 
   return true;
 };
@@ -110,7 +112,9 @@ Supply.prototype.use = function use(name, fn, opts) {
   this.layers.splice(opts.at, 0, layer);
 
   this.length++;
-  if (this.provider.emit) this.provider.emit('use', layer);
+  if (this.provider.emit) {
+    this.provider.emit('use', layer);
+  }
 
   return this.provider;
 };

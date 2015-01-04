@@ -24,6 +24,9 @@ describe('supply', function () {
   it('can be constructed without arguments', function () {
     supply.destroy();
     supply = new Supply();
+
+    supply.use('hi', function foobar() {});
+    supply.remove('hi');
   });
 
   it('can be constructed without new', function () {
