@@ -23,14 +23,20 @@ function Layer(name, fn) {
  *
  * @constructor
  * @param {EventEmitter} provider EventEmitter instance.
+ * @param {Object} options Optional options.
  * @api public
  */
-function Supply(provider) {
+function Supply(provider, options) {
   if (!this) return new Supply();
+  options = options || {};
 
   this.provider = provider || this;
   this.layers = [];
   this.length = 0;
+
+  if ('function' === typeof this.initialize) {
+    this.initialize(options);
+  }
 }
 
 Supply.extend = require('extendible');
