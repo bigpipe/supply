@@ -31,9 +31,10 @@ describe('supply', function () {
 
   it('can be constructed without new', function () {
     supply.destroy();
-    supply = Supply();
+    supply = Supply('provider');
 
     assume(supply).is.instanceOf(Supply);
+    assume(supply.provider).equals('provider');
   });
 
   it('calls the supplied initialize method when contructed', function (next) {

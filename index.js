@@ -27,7 +27,8 @@ function Layer(name, fn) {
  * @api public
  */
 function Supply(provider, options) {
-  if (!this) return new Supply();
+  if (!this) return new Supply(provider, options);
+
   options = options || {};
 
   this.provider = provider || this;
