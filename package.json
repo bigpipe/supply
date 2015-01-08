@@ -1,6 +1,6 @@
 {
   "name": "supply",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Supply your library with plugin and middleware management",
   "main": "index.js",
   "scripts": {
