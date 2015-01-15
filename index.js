@@ -168,12 +168,17 @@ Supply.prototype.each = function each() {
   function next(err, done) {
     var layer = supply.layers[i++];
 
-    if (err || done || !layer) return fn(err, !!done);
+    if (err || done || !layer) {
+      return fn(err, !!done);
+    }
 
-    if (layer.length > length) return layer.fn.apply(supply.provider, args.concat(next));
-    else dollars.catch(function catching() {
-      return layer.fn.apply(supply.provider, args);
-    }, next);
+    if (layer.length > length) {
+      return layer.fn.apply(supply.provider, args.concat(next));
+    } else {
+      dollars.catch(function catching() {
+        return layer.fn.apply(supply.provider, args);
+      }, next);
+    }
   }
 
   length = args.length;
