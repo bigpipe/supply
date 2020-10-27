@@ -42,7 +42,7 @@
   "dependencies": {
     "dollars": "0.0.x",
     "extendible": "0.1.x",
-    "fn.name": "1.0.x"
+    "fn.name": "~1.1.0"
   },
   "pre-commit": ["coverage", "100%"]
 }
